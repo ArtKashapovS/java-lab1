@@ -1,21 +1,21 @@
 package ru.ssau.lab1.servlet;
 
 import com.google.gson.Gson;
+import jakarta.ejb.EJB;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import ru.ssau.lab1.dao.SeatDAO;
 import ru.ssau.lab1.services.AsyncTasksService;
-import ru.ssau.lab1.store.PsqlStore;
-import ru.ssau.lab1.model.Account;
 import ru.ssau.lab1.model.Seat;
 
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -25,14 +25,17 @@ import java.util.List;
 
 @WebServlet(urlPatterns = "/hall", asyncSupported = true)
 public class HallServlet extends HttpServlet {
+    @EJB
+    private SeatDAO seatDAO;
     private final AsyncTasksService asyncTasksService = AsyncTasksService.getInstance();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        System.out.println("handle");
         String action = req.getParameter("action");
         if (action.equals("new")) {
             resp.setCharacterEncoding("UTF-8");
-            Collection<Seat> allSeats = PsqlStore.instOf().getAllSeats();
+            Collection<Seat> allSeats = seatDAO.getAllSeats();
             String jsonOut = new Gson().toJson(allSeats);
             try (PrintWriter writer = resp.getWriter()) {
                 writer.write(jsonOut);
@@ -61,8 +64,7 @@ public class HallServlet extends HttpServlet {
                 for (Object o : json) {
                     JSONObject j = (JSONObject) o;
                     int sId = Integer.parseInt(j.get("id").toString());
-                    PsqlStore.instOf().tempSeatOwner(sId, -1);
-                    Seat seat = PsqlStore.instOf().getSeatById(sId);
+                    Seat seat = seatDAO.findById(sId);
                     seats.add(seat);
                 }
                 session.setAttribute("chosenSeats", seats);

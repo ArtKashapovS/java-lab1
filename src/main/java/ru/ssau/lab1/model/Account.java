@@ -1,11 +1,27 @@
 package ru.ssau.lab1.model;
 
+import jakarta.persistence.*;
+
+import java.util.List;
+
+@Entity
+@Table(name = "account")
+@NamedQuery(name = "Account.getAll", query = "SELECT a from account a")
 public class Account {
 
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @Column(name = "id", nullable = false)
     private int id;
+
+    @Column(name = "name", nullable = false)
     private String name;
+
+    @Column(name = "email", nullable = false)
     private String email;
-    private String password;
+
+    @OneToMany(mappedBy = "account")
+    private List<Seat> seats;
 
     public Account() {
     }
@@ -32,13 +48,5 @@ public class Account {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 }

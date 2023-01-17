@@ -1,17 +1,33 @@
 package ru.ssau.lab1.model;
 
 
-import ru.ssau.lab1.store.PsqlStore;
+import jakarta.persistence.*;
 
 import java.util.Objects;
 
+@Entity
+@Table(name = "cinema_hall")
+@NamedQuery(name = "Seat.getAll", query = "SELECT c from cinema_hall c")
 public class Seat {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private int id;
+
+    @Column(name = "row", nullable = false)
     private int row;
+
+    @Column(name = "col", nullable = false)
     private int col;
-    private int accountId;
+    @ManyToOne
+    @JoinColumn(name = "account_id", nullable = true)
+    private Account account;
+
+    @Transient
     private int customID;
+
+    @Column(name = "price", nullable = false)
     private float price;
 
     public Seat() {
@@ -41,12 +57,12 @@ public class Seat {
         this.col = col;
     }
 
-    public int getAccountId() {
-        return accountId;
+    public Account getAccount() {
+        return account;
     }
 
-    public void setAccountId(int accountId) {
-        this.accountId = accountId;
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
     public void generateCustomId() {
@@ -76,9 +92,5 @@ public class Seat {
     @Override
     public int hashCode() {
         return Objects.hash(id);
-    }
-
-    public static void main(String[] args) {
-        PsqlStore.instOf().getAllSeats().stream().map(Seat::getCustomID).forEach(System.out::println);
     }
 }

@@ -1,19 +1,21 @@
 package ru.ssau.lab1.servlet;
 
 import com.google.gson.Gson;
+import jakarta.ejb.EJB;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import ru.ssau.lab1.dao.AccountDAO;
+import ru.ssau.lab1.dao.SeatDAO;
 import ru.ssau.lab1.model.Account;
 import ru.ssau.lab1.model.Seat;
-import ru.ssau.lab1.store.PsqlStore;
 
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -21,6 +23,12 @@ import java.util.List;
 
 @WebServlet(urlPatterns = "/pay")
 public class PaymentServlet extends HttpServlet {
+
+    @EJB
+    private AccountDAO accountDAO;
+
+    @EJB
+    private SeatDAO seatDAO;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -49,18 +57,18 @@ public class PaymentServlet extends HttpServlet {
             String email = json.get("email").toString();
             acc.setName(name);
             acc.setEmail(email);
-            int id = PsqlStore.instOf().addAcc(acc);
-            acc.setId(id);
+            accountDAO.create(acc);
         } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
         HttpSession session = req.getSession();
         List<Seat> seats = (List<Seat>) session.getAttribute("chosenSeats");
+        Account createdAccount = accountDAO.findByID(acc.getId());
         for (Seat seat : seats) {
-            PsqlStore.instOf().tempSeatOwner(seat.getId(), acc.getId());
+            seat.setAccount(createdAccount);
+            seatDAO.update(seat);
         }
 
-        PsqlStore.instOf().setSetSeatOwner(acc.getId());
         resp.sendRedirect(req.getContextPath() + "/hall");
     }
 }
