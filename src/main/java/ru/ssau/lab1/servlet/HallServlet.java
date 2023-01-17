@@ -31,7 +31,6 @@ public class HallServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        System.out.println("handle");
         String action = req.getParameter("action");
         if (action.equals("new")) {
             resp.setCharacterEncoding("UTF-8");
